@@ -2,7 +2,7 @@ use vst::editor::Editor;
 use derive_builder::Builder;
 
 #[derive(Builder)]
-struct MyEditor {
+pub struct MyEditor {
     #[builder(default = "(200, 200)")]
     size: (i32, i32),
 
