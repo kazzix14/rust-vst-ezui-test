@@ -1,21 +1,11 @@
 mod editor;
 
-use editor::MyEditor;
 use editor::MyEditorBuilder;
 
 mod ui;
-use ui::MyUi;
 
 mod parameter;
 use parameter::MyParameters;
-
-use conrod::glium;
-use conrod::glium::DisplayBuild;
-use conrod::glium::Surface;
-use conrod::widget_ids;
-
-use derive_builder::Builder;
-use log;
 
 use vst::plugin_main;
 
@@ -26,12 +16,8 @@ use vst::buffer::AudioBuffer;
 use vst::editor::Editor;
 use vst::event::Event;
 use vst::plugin::{CanDo, Category, Info, Plugin, PluginParameters};
-use vst::util::AtomicFloat;
 
 use std::f64::consts::PI;
-use std::os::raw::c_void;
-
-use std::path::{Path, PathBuf};
 
 fn midi_pitch_to_freq(pitch: u8) -> f64 {
     const A4_PITCH: i8 = 69;

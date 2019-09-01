@@ -1,9 +1,9 @@
 use crate::parameter::MyParameters;
 use crate::ui::MyUi;
 
+use std::os::raw::c_void;
 use std::path::Path;
 use std::sync::Arc;
-use std::os::raw::c_void;
 
 use derive_builder::Builder;
 
@@ -13,7 +13,6 @@ use conrod::glium;
 
 use glium::DisplayBuild;
 
-
 #[derive(Builder)]
 pub struct MyEditor {
     #[builder(default = "(200, 200)")]
@@ -21,9 +20,6 @@ pub struct MyEditor {
 
     #[builder(default = "(0, 0)")]
     position: (i32, i32),
-
-    #[builder(default = "false", setter(skip))]
-    is_open: bool,
 
     params: Arc<MyParameters>,
 
