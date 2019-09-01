@@ -1,3 +1,5 @@
+use crate::parameter::MyParameters;
+
 use std::path::Path;
 use std::sync::Arc;
 
@@ -60,7 +62,7 @@ impl MyUi {
         }
     }
 
-    fn draw(&mut self, params: Arc<MyParameters>) {
+    pub fn draw(&mut self, params: Arc<MyParameters>) {
         for event in self.display.poll_events() {
             // Use the `winit` backend feature to convert the winit event to a conrod one.
             if let Some(event) = conrod::backend::winit::convert(event.clone(), &self.display) {

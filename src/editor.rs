@@ -1,5 +1,18 @@
-use vst::editor::Editor;
+use crate::parameter::MyParameters;
+use crate::ui::MyUi;
+
+use std::path::Path;
+use std::sync::Arc;
+use std::os::raw::c_void;
+
 use derive_builder::Builder;
+
+use vst::editor::Editor;
+
+use conrod::glium;
+
+use glium::DisplayBuild;
+
 
 #[derive(Builder)]
 pub struct MyEditor {
@@ -15,7 +28,7 @@ pub struct MyEditor {
     params: Arc<MyParameters>,
 
     #[builder(default = "None", setter(skip))]
-    ui: Option<UiState>,
+    ui: Option<MyUi>,
 }
 
 impl Editor for MyEditor {
@@ -47,7 +60,7 @@ impl Editor for MyEditor {
             .with_multisampling(4)
             .build_glium()
         {
-            Ok(display) => self.ui = Some(UiState::new(Path::new("."), display)),
+            Ok(display) => self.ui = Some(MyUi::new(Path::new("."), display)),
             Err(_) => (),
         }
 

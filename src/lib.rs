@@ -6,6 +6,9 @@ use editor::MyEditorBuilder;
 mod ui;
 use ui::MyUi;
 
+mod parameter;
+use parameter::MyParameters;
+
 use conrod::glium;
 use conrod::glium::DisplayBuild;
 use conrod::glium::Surface;
@@ -37,9 +40,6 @@ fn midi_pitch_to_freq(pitch: u8) -> f64 {
     ((f64::from(pitch as i8 - A4_PITCH)) / 12.0).exp2() * A4_FREQ
 }
 
-
-
-
 #[derive(Clone)]
 struct MyPlugin {
     sampling_rate: f64,
@@ -48,70 +48,6 @@ struct MyPlugin {
     note: Option<u8>,
     params: Arc<MyParameters>,
     editor_returned: bool,
-}
-
-
-
-
-
-
-struct MyParameters {
-    attack: AtomicFloat,
-}
-
-impl Default for MyParameters {
-    fn default() -> MyParameters {
-        MyParameters {
-            attack: AtomicFloat::new(0.5),
-        }
-    }
-}
-
-impl MyParameters {
-    pub fn set_attack(&self, value: f32) {
-        self.attack.set(value)
-    }
-
-    pub fn get_attack(&self) -> f32 {
-        self.attack.get()
-    }
-}
-
-impl PluginParameters for MyParameters {
-    fn get_parameter(&self, index: i32) -> f32 {
-        match index {
-            0 => self.get_attack(),
-            _ => 0.0,
-        }
-    }
-
-    fn set_parameter(&self, index: i32, value: f32) {
-        match index {
-            0 => self.set_attack(value),
-            _ => (),
-        }
-    }
-
-    fn get_parameter_name(&self, index: i32) -> String {
-        match index {
-            0 => "attack".to_string(),
-            _ => "".to_string(),
-        }
-    }
-
-    fn get_parameter_label(&self, index: i32) -> String {
-        match index {
-            0 => "s".to_string(),
-            _ => "".to_string(),
-        }
-    }
-
-    fn get_parameter_text(&self, index: i32) -> String {
-        match index {
-            0 => format!("{:.3}", self.get_attack()),
-            _ => format!(""),
-        }
-    }
 }
 
 impl MyPlugin {
