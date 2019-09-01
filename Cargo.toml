@@ -1,0 +1,24 @@
+[package]
+name = "vst_bass_0"
+version = "0.0.1"
+authors = ["Kazzix <kazzix14@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+vst = "0.1.0"
+log = "0.3"
+easyvst = "0.1.0"
+derive_builder = "0.7.2"
+conrod = { version = "0.52", features = ["piston", "glium", "winit"] }
+winit = "0.5.11"
+
+[patch.crates-io]
+vst = { git = "https://github.com/RustAudio/vst-rs.git" }
+easyvst = { git = "https://github.com/Boscop/easyvst.git" }
+winit = { git = 'https://github.com/Boscop/winit-vst' }
+
+[lib]
+name = "vst_bass_0"
+crate-type = ["cdylib"]
