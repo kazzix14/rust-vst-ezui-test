@@ -1,8 +1,10 @@
-mod editor;
+mod resource;
 
+mod editor;
+use editor::MyEditor;
 use editor::MyEditorBuilder;
 
-mod ui;
+//mod ui;
 
 mod parameter;
 use parameter::MyParameters;
@@ -19,6 +21,8 @@ use vst::plugin::{CanDo, Category, Info, Plugin, PluginParameters};
 
 use std::f64::consts::PI;
 
+const TAU: f64 = PI * 2.0;
+
 fn midi_pitch_to_freq(pitch: u8) -> f64 {
     const A4_PITCH: i8 = 69;
     const A4_FREQ: f64 = 440.0;
@@ -26,14 +30,14 @@ fn midi_pitch_to_freq(pitch: u8) -> f64 {
     ((f64::from(pitch as i8 - A4_PITCH)) / 12.0).exp2() * A4_FREQ
 }
 
-#[derive(Clone)]
+//#[derive(Clone)]
 struct MyPlugin {
     sampling_rate: f64,
     time: f64,
     note_duration: f64,
     note: Option<u8>,
     params: Arc<MyParameters>,
-    editor_returned: bool,
+    editor_exists: bool,
 }
 
 impl MyPlugin {
@@ -64,8 +68,6 @@ impl MyPlugin {
     }
 }
 
-pub const TAU: f64 = PI * 2.0;
-
 impl Default for MyPlugin {
     fn default() -> MyPlugin {
         MyPlugin {
@@ -74,7 +76,7 @@ impl Default for MyPlugin {
             time: 0.0,
             note: None,
             params: Arc::new(MyParameters::default()),
-            editor_returned: false,
+            editor_exists: false,
         }
     }
 }
@@ -95,15 +97,14 @@ impl Plugin for MyPlugin {
     }
 
     fn get_editor(&mut self) -> Option<Box<dyn Editor>> {
-        match self.editor_returned {
+        match self.editor_exists {
             false => {
-                self.editor_returned = true;
-                Some(Box::new(
-                    MyEditorBuilder::default()
-                        .params(Arc::clone(&self.params))
-                        .build()
-                        .unwrap(),
-                ))
+                let editor = MyEditorBuilder::default()
+                    .params(Arc::clone(&self.params))
+                    .build()
+                    .unwrap();
+
+                Some(Box::new(editor))
             }
             true => None,
         }
@@ -114,7 +115,6 @@ impl Plugin for MyPlugin {
     }
 
     fn process_events(&mut self, events: &Events) {
-        println!("event!");
         for event in events.events() {
             match event {
                 Event::Midi(ev) => self.process_midi_event(ev.data),
@@ -129,7 +129,7 @@ impl Plugin for MyPlugin {
 
     fn process(&mut self, buffer: &mut AudioBuffer<f32>) {
         let samples = buffer.samples();
-        let (_, outputs) = buffer.split();
+        let (_, mut outputs) = buffer.split();
         let output_count = outputs.len();
         let per_sample = self.time_per_sample();
         let mut output_sample;
