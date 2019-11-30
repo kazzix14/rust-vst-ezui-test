@@ -1,4 +1,3 @@
-mod resource;
 
 mod editor;
 use editor::MyEditor;
@@ -99,6 +98,7 @@ impl Plugin for MyPlugin {
     fn get_editor(&mut self) -> Option<Box<dyn Editor>> {
         match self.editor_exists {
             false => {
+                
                 let editor = MyEditorBuilder::default()
                     .params(Arc::clone(&self.params))
                     .build()

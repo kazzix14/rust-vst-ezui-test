@@ -22,9 +22,13 @@ use glium::glutin;
 use glium::DisplayBuild;
 use glium::Surface;
 
+pub const FONT_RAW: &'static [u8] = include_bytes!("../resource/font/OpenSans-Regular.ttf");
+pub const KNOB_BASE_WHITE_RAW: &'static [u8] = include_bytes!("../resource/image/white.png");
+pub const KNOB_LIGHT_RAW: &'static [u8] = include_bytes!("../resource/image/light.png");
+
 #[derive(Builder)]
 #[builder(pattern = "owned")]
-pub struct MyEditor<'a> {
+pub struct MyEditor {
     #[builder(default = "(400, 400)")]
     size: (i32, i32),
 
@@ -33,12 +37,15 @@ pub struct MyEditor<'a> {
     #[builder(default = "None", setter(skip))]
     ui: Option<ezui::Ui>,
 
-    texture_knob_attack_base: ezui::standard::UiTexture<'a>,
-    texture_knob_attack_light: ezui::standard::UiTexture<'a>,
-    button_knob_attack: ezui::standard::UiButton,
+    #[builder(default = "None", setter(skip))]
+    texture_knob_attack_base: Option<ezui::standard::UiTexture>,
+    #[builder(default = "None", setter(skip))]
+    texture_knob_attack_light: Option<ezui::standard::UiTexture>,
+    #[builder(default = "None", setter(skip))]
+    button_knob_attack: Option<ezui::standard::UiButton>,
 }
 
-impl<'a> Editor for MyEditor<'a> {
+impl Editor for MyEditor {
     fn size(&self) -> (i32, i32) {
         self.size
     }
@@ -48,11 +55,25 @@ impl<'a> Editor for MyEditor<'a> {
     }
 
     fn idle(&mut self) {
-        /*
         let params = Arc::clone(&self.params);
-        let texture_knob_attack_base = &mut self.texture_knob_attack_base;
-        let texture_knob_attack_light = &mut self.texture_knob_attack_light;
-        let button_knob_attack = &mut self.button_knob_attack;
+        let mut texture_knob_attack_base = self.texture_knob_attack_base.as_mut();
+        let mut texture_knob_attack_light = self.texture_knob_attack_light.as_mut();
+        let mut button_knob_attack = self.button_knob_attack.as_mut();
+
+        macro_rules! unwrap_or_return {
+            ($name:ident) => {
+                match &$name.as_ref() {
+                    &Some(_) => return,
+                    _ => (),
+                }
+                let $name = $name.as_mut().unwrap();
+            };
+        }
+
+        unwrap_or_return!(texture_knob_attack_base);
+        unwrap_or_return!(texture_knob_attack_light);
+        unwrap_or_return!(button_knob_attack);
+
         if let Some(ui) = &mut self.ui {
             ui.update(|target, events, mouse, system| {
                 ///// UPDATE /////
@@ -75,13 +96,12 @@ impl<'a> Editor for MyEditor<'a> {
                     });
 
                 ///// DRAW /////
-                target.clear_color(0.2, 0.2, 0.2, 0.2);
+                target.clear_color(0.2, 0.2, 0.2, 1.0);
 
                 texture_knob_attack_base.draw(target, system);
                 texture_knob_attack_light.draw(target, system);
             });
         }
-        */
     }
 
     fn close(&mut self) {
@@ -99,13 +119,51 @@ impl<'a> Editor for MyEditor<'a> {
             .build_glium()
         {
             Ok(display) => {
+                let position_knob_attack = (0.1, 0.1);
+                let size_knob_attack = (0.3, 0.3);
+
+                let texture_knob_attack_base_raw = ezui::SimpleTexture::from(
+                    &KNOB_BASE_WHITE_RAW,
+                    ezui::ImageFormat::PNG,
+                    &display,
+                )
+                .unwrap();
+                let texture_knob_attack_light_raw =
+                    ezui::SimpleTexture::from(&KNOB_LIGHT_RAW, ezui::ImageFormat::PNG, &display)
+                        .unwrap();
+
+                let texture_knob_attack_base = ezui::standard::UiTextureBuilder::default()
+                    .position(position_knob_attack)
+                    .size(size_knob_attack)
+                    .texture(Arc::new(texture_knob_attack_base_raw))
+                    .rotation(0.0)
+                    .build()
+                    .unwrap();
+
+                let texture_knob_attack_light = ezui::standard::UiTextureBuilder::default()
+                    .position(position_knob_attack)
+                    .size(size_knob_attack)
+                    .texture(Arc::new(texture_knob_attack_light_raw))
+                    .rotation(0.0)
+                    .build()
+                    .unwrap();
+
+                let button_knob_attack = ezui::standard::UiButtonBuilder::default()
+                    .position(position_knob_attack)
+                    .size(size_knob_attack)
+                    .build()
+                    .unwrap();
+
+                self.texture_knob_attack_base = Some(texture_knob_attack_base);
+                self.texture_knob_attack_light = Some(texture_knob_attack_light);
+                self.button_knob_attack = Some(button_knob_attack);
+
                 self.ui = Some(ezui::Ui::new(display));
             }
             Err(_) => (),
         }
 
-        //self.is_open()
-        false
+        self.is_open()
     }
 
     fn is_open(&mut self) -> bool {
