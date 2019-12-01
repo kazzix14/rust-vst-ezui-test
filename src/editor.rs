@@ -63,8 +63,8 @@ impl Editor for MyEditor {
         macro_rules! unwrap_or_return {
             ($name:ident) => {
                 match &$name.as_ref() {
-                    &Some(_) => return,
-                    _ => (),
+                    &Some(_) => (),
+                    _ => return,
                 }
                 let $name = $name.as_mut().unwrap();
             };
@@ -84,8 +84,8 @@ impl Editor for MyEditor {
                     .for_each(|(button, state)| match state {
                         ButtonState::Pressed(_, _) => {
                             let scale = match button {
-                                MouseButton::Left => 0.2,
-                                _ => 1.0,
+                                MouseButton::Left => 1.0,
+                                _ => 5.0,
                             };
                             let attack = params.get_attack();
                             let attack = attack + mouse.delta_position().1 * scale;
@@ -94,7 +94,6 @@ impl Editor for MyEditor {
                         }
                         _ => (),
                     });
-
                 ///// DRAW /////
                 target.clear_color(0.2, 0.2, 0.2, 1.0);
 
