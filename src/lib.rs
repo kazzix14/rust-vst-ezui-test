@@ -1,12 +1,14 @@
 
 mod editor;
+use vst::plugin::HostCallback;
+use vst::util::ParameterTransfer;
 use editor::MyEditor;
 use editor::MyEditorBuilder;
 
 //mod ui;
 
 mod parameter;
-use parameter::MyParameters;
+use parameter::*;
 
 mod ui;
 
@@ -29,6 +31,10 @@ fn midi_pitch_to_freq(pitch: u8) -> f64 {
     const A4_FREQ: f64 = 440.0;
 
     ((f64::from(pitch as i8 - A4_PITCH)) / 12.0).exp2() * A4_FREQ
+}
+
+pub enum Index {
+    Attack,
 }
 
 //#[derive(Clone)]
@@ -82,7 +88,20 @@ impl Default for MyPlugin {
     }
 }
 
+const PARAMETER_COUNT : usize = 1;
+
 impl Plugin for MyPlugin {
+    fn new(host: HostCallback) -> Self {
+        MyPlugin {
+            params: Arc::new(
+                MyParametersBuilder::default().
+                host(host).
+                transfer(ParameterTransfer::new(PARAMETER_COUNT)).build().unwrap()
+                ),
+            ..Default::default()
+        }
+    }
+
     fn get_info(&self) -> Info {
         Info {
             name: "Vass 0".to_string(),
@@ -129,6 +148,8 @@ impl Plugin for MyPlugin {
         self.sampling_rate = f64::from(rate);
     }
 
+    
+
     fn process(&mut self, buffer: &mut AudioBuffer<f32>) {
         let samples = buffer.samples();
         let (_, mut outputs) = buffer.split();
@@ -136,12 +157,14 @@ impl Plugin for MyPlugin {
         let per_sample = self.time_per_sample();
         let mut output_sample;
 
+        let attack = self.params.get_parameter(Index::Attack as i32);
+
         for sample_index in 0..samples {
             let mut time = self.time;
             let mut note_duration = self.note_duration;
             if let Some(current_note) = self.note {
                 let signal = (time * midi_pitch_to_freq(current_note) * TAU).sin();
-                let attack = f64::from(self.params.get_attack());
+                let attack = f64::from(attack);
                 let alpha = if note_duration < attack {
                     note_duration / attack
                 } else {

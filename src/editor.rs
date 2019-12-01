@@ -68,7 +68,7 @@ impl Editor for MyEditor {
             .build_glium()
         {
             Ok(display) => {
-                //self.ui = Some(MyUi::new(display));
+                self.ui = Some(MyUi::new(display));
             }
             Err(_) => (),
         }

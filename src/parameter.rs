@@ -1,43 +1,27 @@
-use vst::util::AtomicFloat;
+use vst::plugin::HostCallback;
 use vst::plugin::PluginParameters;
+use vst::util::AtomicFloat;
+use vst::util::ParameterTransfer;
 
+use derive_builder::Builder;
+
+#[derive(Default, Builder)]
+#[builder(pattern = "owned")]
 pub struct MyParameters {
-    attack: AtomicFloat,
-}
-
-impl MyParameters {
-    pub fn set_attack(&self, value: f32) {
-        self.attack.set(value)
-    }
-
-    pub fn get_attack(&self) -> f32 {
-        self.attack.get()
-    }
-}
-
-impl Default for MyParameters {
-    fn default() -> MyParameters {
-        MyParameters {
-            attack: AtomicFloat::new(0.5),
-        }
-    }
+    //attack: AtomicFloat,
+    host: HostCallback,
+    transfer: ParameterTransfer,
 }
 
 impl PluginParameters for MyParameters {
     fn get_parameter(&self, index: i32) -> f32 {
-        match index {
-            0 => self.get_attack(),
-            _ => 0.0,
-        }
+        self.transfer.get_parameter(index as usize)
     }
 
     fn set_parameter(&self, index: i32, value: f32) {
-        match index {
-            0 => self.set_attack(value),
-            _ => (),
-        }
+        self.transfer.set_parameter(index as usize, value)
     }
-
+    /*
     fn get_parameter_name(&self, index: i32) -> String {
         match index {
             0 => "attack".to_string(),
@@ -58,4 +42,5 @@ impl PluginParameters for MyParameters {
             _ => format!(""),
         }
     }
+    */
 }

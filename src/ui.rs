@@ -1,4 +1,5 @@
 use crate::parameter::MyParameters;
+use vst::plugin::PluginParameters;
 
 use std::sync::Arc;
 
@@ -56,6 +57,7 @@ impl MyUi {
         let texture_attack_knob_light = &mut self.texture_attack_knob_light;
         let button_attack_knob = &mut self.button_attack_knob;
         let ui = &mut self.ui;
+        use crate::Index;
 
             ui.update(|target, events, mouse, system| {
                 ///// UPDATE /////
@@ -69,9 +71,9 @@ impl MyUi {
                                 MouseButton::Left => 1.0,
                                 _ => 5.0,
                             };
-                            let attack = params.get_attack();
+                            let attack = params.get_parameter(Index::Attack as i32);
                             let attack = attack + mouse.delta_position().1 * scale;
-                            params.set_attack(attack);
+                            params.set_parameter(Index::Attack as i32, attack);
                             texture_attack_knob_light.rotation = attack * 270.0 - 180.0;
                         }
                         _ => (),
