@@ -1,9 +1,8 @@
-
 mod editor;
-use vst::plugin::HostCallback;
-use vst::util::ParameterTransfer;
 use editor::MyEditor;
 use editor::MyEditorBuilder;
+use vst::plugin::HostCallback;
+use vst::util::ParameterTransfer;
 
 //mod ui;
 
@@ -88,16 +87,18 @@ impl Default for MyPlugin {
     }
 }
 
-const PARAMETER_COUNT : usize = 1;
+const PARAMETER_COUNT: usize = 1;
 
 impl Plugin for MyPlugin {
     fn new(host: HostCallback) -> Self {
         MyPlugin {
             params: Arc::new(
-                MyParametersBuilder::default().
-                host(host).
-                transfer(ParameterTransfer::new(PARAMETER_COUNT)).build().unwrap()
-                ),
+                MyParametersBuilder::default()
+                    .host(host)
+                    .transfer(ParameterTransfer::new(PARAMETER_COUNT))
+                    .build()
+                    .unwrap(),
+            ),
             ..Default::default()
         }
     }
@@ -119,7 +120,6 @@ impl Plugin for MyPlugin {
     fn get_editor(&mut self) -> Option<Box<dyn Editor>> {
         match self.editor_exists {
             false => {
-                
                 let editor = MyEditorBuilder::default()
                     .params(Arc::clone(&self.params))
                     .build()
@@ -147,8 +147,6 @@ impl Plugin for MyPlugin {
     fn set_sample_rate(&mut self, rate: f32) {
         self.sampling_rate = f64::from(rate);
     }
-
-    
 
     fn process(&mut self, buffer: &mut AudioBuffer<f32>) {
         let samples = buffer.samples();

@@ -63,10 +63,7 @@ impl Editor for MyEditor {
             .with_decorations(false)
             .with_parent(parent);
 
-        match glutin::WindowBuilder::from_winit_builder(wb)
-            .with_multisampling(4)
-            .build_glium()
-        {
+        match glutin::WindowBuilder::from_winit_builder(wb).build_glium() {
             Ok(display) => {
                 self.ui = Some(MyUi::new(display));
             }
