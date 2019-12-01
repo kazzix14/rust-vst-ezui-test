@@ -11,6 +11,8 @@ use vst::editor::Editor;
 
 //use conrod::glium;
 
+use crate::ui;
+
 use ezui;
 use ezui::glium;
 use ezui::mouse::*;
@@ -62,9 +64,8 @@ impl Editor for MyEditor {
 
         macro_rules! unwrap_or_return {
             ($name:ident) => {
-                match &$name.as_ref() {
-                    &Some(_) => (),
-                    _ => return,
+                if $name.is_none() {
+                    return;
                 }
                 let $name = $name.as_mut().unwrap();
             };
@@ -105,6 +106,9 @@ impl Editor for MyEditor {
 
     fn close(&mut self) {
         self.ui = None;
+        self.texture_knob_attack_base = None;
+        self.texture_knob_attack_light = None;
+        self.button_knob_attack = None;
     }
 
     fn open(&mut self, parent: *mut c_void) -> bool {
@@ -118,6 +122,7 @@ impl Editor for MyEditor {
             .build_glium()
         {
             Ok(display) => {
+                /*
                 let position_knob_attack = (0.1, 0.1);
                 let size_knob_attack = (0.3, 0.3);
 
@@ -127,6 +132,7 @@ impl Editor for MyEditor {
                     &display,
                 )
                 .unwrap();
+
                 let texture_knob_attack_light_raw =
                     ezui::SimpleTexture::from(&KNOB_LIGHT_RAW, ezui::ImageFormat::PNG, &display)
                         .unwrap();
@@ -134,7 +140,7 @@ impl Editor for MyEditor {
                 let texture_knob_attack_base = ezui::standard::UiTextureBuilder::default()
                     .position(position_knob_attack)
                     .size(size_knob_attack)
-                    .texture(Arc::new(texture_knob_attack_base_raw))
+                    .texture(Box::new(texture_knob_attack_base_raw))
                     .rotation(0.0)
                     .build()
                     .unwrap();
@@ -142,7 +148,7 @@ impl Editor for MyEditor {
                 let texture_knob_attack_light = ezui::standard::UiTextureBuilder::default()
                     .position(position_knob_attack)
                     .size(size_knob_attack)
-                    .texture(Arc::new(texture_knob_attack_light_raw))
+                    .texture(Box::new(texture_knob_attack_light_raw))
                     .rotation(0.0)
                     .build()
                     .unwrap();
@@ -158,6 +164,7 @@ impl Editor for MyEditor {
                 self.button_knob_attack = Some(button_knob_attack);
 
                 self.ui = Some(ezui::Ui::new(display));
+                */
             }
             Err(_) => (),
         }

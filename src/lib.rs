@@ -8,6 +8,8 @@ use editor::MyEditorBuilder;
 mod parameter;
 use parameter::MyParameters;
 
+mod ui;
+
 use vst::plugin_main;
 
 use std::sync::Arc;
