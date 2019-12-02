@@ -74,7 +74,8 @@ impl Editor for MyEditor {
         let events_loop = glutin::EventsLoop::new();
         let window_builder = glutin::WindowBuilder::new()
             .with_dimensions(LogicalSize::new(self.size.0 as f64, self.size.1 as f64))
-            .with_decorations(false);
+            .with_always_on_top(true);
+        //    .with_decorations(false);
         //.with_parent_window(parent);
 
         let context_builder = glutin::ContextBuilder::new();

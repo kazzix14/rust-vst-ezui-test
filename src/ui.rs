@@ -91,10 +91,13 @@ impl MyUi {
                         let attack = params.get_parameter(Index::Attack as i32);
                         let attack = attack + mouse.delta_position().1 * scale;
                         params.set_parameter(Index::Attack as i32, attack);
-                        texture_attack_knob_light.rotation = attack * 270.0 - 180.0;
                     }
                     _ => (),
                 });
+
+            let attack = params.get_parameter(Index::Attack as i32);
+            texture_attack_knob_light.rotation = attack * 270.0 - 180.0;
+
             ///// DRAW /////
             target.clear_color(0.2, 0.2, 0.2, 1.0);
 
