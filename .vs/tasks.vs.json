@@ -1,0 +1,12 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "appliesTo": "/",
+      "args": [ "build" ],
+      "command": "cargo",
+      "taskLabel": "build",
+      "type": "launch"
+    },
+  ]
+}

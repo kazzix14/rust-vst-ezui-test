@@ -1,0 +1,23 @@
+[package]
+name = "vst_bass_0"
+version = "0.0.1"
+authors = ["Kazzix <kazzix14@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+vst = "0.2.0"
+derive_builder = "0.7.2"
+ezui = "*"
+winapi = "0.3.6"
+log = "0.4.8"
+simple-logging = "2.0.2"
+
+[patch.crates-io]
+vst = { git = "https://github.com/RustAudio/vst-rs.git" }
+ezui = { git = "https://github.com/kazzix14/ezui.git", branch = "develop" }
+
+[lib]
+name = "vst_bass_0"
+crate-type = ["cdylib"]
