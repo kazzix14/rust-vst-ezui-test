@@ -47,7 +47,9 @@ struct MyPlugin {
     note: Option<u8>,
     params: Arc<MyParameters>,
     editor_exists: bool,
-    audio_reader: WavReader<&'static [u8]>,
+    audio_source: &'static [u8],
+    signal: Option<Box<dyn sample::Signal<Frame = [f32; 1]>>>,
+    ring_buffer: sample::ring_buffer::Fixed,
 }
 
 impl MyPlugin {
@@ -68,12 +70,33 @@ impl MyPlugin {
 
     fn note_on(&mut self, note: u8) {
         self.note_duration = 0.0;
-        self.note = Some(note)
+        self.note = Some(note);
+
+        let reader = WavReader::new(self.audio_source.as_ref()).unwrap();
+        use sample::{interpolate, ring_buffer, signal, Sample, Signal};
+
+        let spec = reader.spec();
+        let mut target = spec;
+        target.sample_rate = 44100 as u32;
+
+        let samples = reader.into_samples::<f32>().filter_map(Result::ok);
+        //.map(f32::to_sample::<f32>);
+
+        let signal = signal::from_interleaved_samples_iter(samples);
+
+        let ring_buffer = ring_buffer::Fixed::from([[0.0 as f32]; 64]);
+        let sinc = interpolate::Sinc::new(ring_buffer);
+        let signal = signal.from_hz_to_hz(sinc, spec.sample_rate as f64, target.sample_rate as f64);
+
+        self.signal = Some(Box::new(signal));
     }
 
     fn note_off(&mut self, note: u8) {
         if self.note == Some(note) {
             self.note = None
+        }
+        if let Some(_) = self.signal {
+            self.signal = None
         }
     }
 }
@@ -81,23 +104,6 @@ impl MyPlugin {
 impl Default for MyPlugin {
     fn default() -> MyPlugin {
         let source = include_bytes!("../resource/audio/audio.wav");
-        let reader = WavReader::new(source.as_ref()).unwrap();
-        use sample::{interpolate, ring_buffer, signal, Sample, Signal};
-
-        let spec = reader.spec();
-        let mut target = spec;
-        target.sample_rate = 44100 as u32;
-
-        let samples = reader
-            .into_samples()
-            .filter_map(Result::ok)
-            .map(i16::to_sample::<f32>);
-
-        let signal = signal::from_interleaved_samples_iter(samples);
-
-        let ring_buffer = ring_buffer::Fixed::from([[0.0]; 64]);
-        let sinc = interpolate::Sinc::new(ring_buffer);
-        let signal = signal.from_hz_to_hz(sinc, spec.sample_rate as f64, target.sample_rate as f64);
 
         MyPlugin {
             sampling_rate: 44100.0,
@@ -106,7 +112,8 @@ impl Default for MyPlugin {
             note: None,
             params: Arc::new(MyParameters::default()),
             editor_exists: false,
-            audio_reader: reader,
+            audio_source: source,
+            signal: None,
         }
     }
 }
@@ -184,6 +191,8 @@ impl Plugin for MyPlugin {
         for sample_index in 0..samples {
             let mut time = self.time;
             let mut note_duration = self.note_duration;
+
+            /*
             if let Some(current_note) = self.note {
                 let signal = (time * midi_pitch_to_freq(current_note) * TAU).sin();
                 let attack = f64::from(attack);
@@ -199,7 +208,18 @@ impl Plugin for MyPlugin {
                 self.note_duration += per_sample;
             } else {
                 output_sample = 0.0;
+            }*/
+
+            //simple_logging::log_to_file("M:/VST2/x64/Kazzix/log.txt", log::LevelFilter::Trace);
+            //use log::info;
+
+            if let Some(signal) = &mut self.signal {
+                output_sample = signal.next()[0];
+            } else {
+                output_sample = 0.0;
             }
+
+            //info!("output :{}", output_sample);
 
             for buff_index in 0..output_count {
                 let buff = outputs.get_mut(buff_index);
