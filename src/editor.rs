@@ -64,25 +64,27 @@ impl Editor for MyEditor {
     }
 
     fn open(&mut self, parent: *mut c_void) -> bool {
+        /*
         simple_logging::log_to_file("M:/VST2/x64/Kazzix/log.txt", log::LevelFilter::Trace);
         use log::info;
         info!("open start");
 
         info!("parent: {}", parent as u32);
         let parent = parent as HWND;
+        */
 
         let events_loop = glutin::EventsLoop::new();
         let window_builder = glutin::WindowBuilder::new()
-            .with_dimensions(LogicalSize::new(self.size.0 as f64, self.size.1 as f64))
-            .with_decorations(false);
+            .with_dimensions(LogicalSize::new(self.size.0 as f64, self.size.1 as f64));
+        //.with_decorations(false);
         //.with_parent_window(parent);
 
         let context_builder = glutin::ContextBuilder::new();
 
-        info!("will build gl_window");
+        //info!("will build gl_window");
         let gl_window =
             glutin::GlWindow::new(window_builder, context_builder, &events_loop).unwrap();
-        info!("built gl_window");
+        //info!("built gl_window");
 
         unsafe { gl_window.make_current() }.unwrap();
 

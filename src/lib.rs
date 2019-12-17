@@ -4,6 +4,9 @@ use editor::MyEditorBuilder;
 use vst::plugin::HostCallback;
 use vst::util::ParameterTransfer;
 
+use sample::Sample;
+
+use hound::WavReader;
 //mod ui;
 
 mod parameter;
@@ -44,6 +47,7 @@ struct MyPlugin {
     note: Option<u8>,
     params: Arc<MyParameters>,
     editor_exists: bool,
+    audio_reader: WavReader<&'static [u8]>,
 }
 
 impl MyPlugin {
@@ -76,6 +80,25 @@ impl MyPlugin {
 
 impl Default for MyPlugin {
     fn default() -> MyPlugin {
+        let source = include_bytes!("../resource/audio/audio.wav");
+        let reader = WavReader::new(source.as_ref()).unwrap();
+        use sample::{interpolate, ring_buffer, signal, Sample, Signal};
+
+        let spec = reader.spec();
+        let mut target = spec;
+        target.sample_rate = 44100 as u32;
+
+        let samples = reader
+            .into_samples()
+            .filter_map(Result::ok)
+            .map(i16::to_sample::<f32>);
+
+        let signal = signal::from_interleaved_samples_iter(samples);
+
+        let ring_buffer = ring_buffer::Fixed::from([[0.0]; 64]);
+        let sinc = interpolate::Sinc::new(ring_buffer);
+        let signal = signal.from_hz_to_hz(sinc, spec.sample_rate as f64, target.sample_rate as f64);
+
         MyPlugin {
             sampling_rate: 44100.0,
             note_duration: 0.0,
@@ -83,6 +106,7 @@ impl Default for MyPlugin {
             note: None,
             params: Arc::new(MyParameters::default()),
             editor_exists: false,
+            audio_reader: reader,
         }
     }
 }
