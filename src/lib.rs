@@ -47,8 +47,9 @@ struct MyPlugin {
     note: Option<u8>,
     params: Arc<MyParameters>,
     editor_exists: bool,
-    audio_source: &'static [u8],
-    signal: Option<Box<dyn sample::Signal<Frame = [f32; 1]>>>,
+    signal_a4: Box<dyn sample::Signal<Frame = [f32; 1]>>,
+    frames: Option<Vec<[f32; 1]>>,
+    frame_head: usize,
 }
 
 impl MyPlugin {
@@ -70,14 +71,24 @@ impl MyPlugin {
     fn note_on(&mut self, note: u8) {
         self.note_duration = 0.0;
         self.note = Some(note);
+
+        use sample::Signal;
+        self.frames = Some(
+            self.signal_a4
+                .by_ref()
+                .until_exhausted()
+                .collect::<Vec<[f32; 1]>>(),
+        );
+
+        self.frame_head = 0;
     }
 
     fn note_off(&mut self, note: u8) {
         if self.note == Some(note) {
             self.note = None
         }
-        if let Some(_) = self.signal {
-            self.signal = None
+        if let Some(_) = self.frames {
+            self.frames = None
         }
     }
 }
@@ -86,17 +97,22 @@ impl Default for MyPlugin {
     fn default() -> MyPlugin {
         use sample::{interpolate, ring_buffer, signal, Sample, Signal};
 
-        let source = include_bytes!("../resource/audio/audio.wav");
+        let source = include_bytes!("../resource/audio/wave.wav");
         let reader = WavReader::new(source.as_ref()).unwrap();
+        //let reader = WavReader::open("../../resource/audio/audio.wav").unwrap();
 
         let spec = reader.spec();
         let mut target = spec;
         target.sample_rate = 44100 as u32;
 
-        let samples = reader
+        let mut samples = reader
             .into_samples()
-            .filter_map(Result::ok)
-            .map(i16::to_sample::<f32>);
+            .filter_map(|s| s.ok())
+            .map(f32::to_sample::<f32>);
+
+        //simple_logging::log_to_file("C:/Users/sonnie/log.txt", log::LevelFilter::Trace);
+        //use log::info;
+        //info!("{:?}", samples.by_ref().collect::<Vec<f32>>());
 
         let signal = signal::from_interleaved_samples_iter(samples);
 
@@ -104,7 +120,7 @@ impl Default for MyPlugin {
         let sinc = interpolate::Sinc::new(ring_buffer);
         let signal = signal.from_hz_to_hz(sinc, spec.sample_rate as f64, target.sample_rate as f64);
 
-        self.signal = Some(Box::new(signal));
+        let signal = Box::new(signal);
         MyPlugin {
             sampling_rate: 44100.0,
             note_duration: 0.0,
@@ -112,8 +128,9 @@ impl Default for MyPlugin {
             note: None,
             params: Arc::new(MyParameters::default()),
             editor_exists: false,
-            audio_source: source,
-            signal: None,
+            signal_a4: signal,
+            frames: None,
+            frame_head: 0,
         }
     }
 }
@@ -210,16 +227,18 @@ impl Plugin for MyPlugin {
                 output_sample = 0.0;
             }*/
 
-            //simple_logging::log_to_file("M:/VST2/x64/Kazzix/log.txt", log::LevelFilter::Trace);
-            //use log::info;
-
-            if let Some(signal) = &mut self.signal {
+            if let Some(frames) = &mut self.frames {
                 use sample::Signal;
-                if let Some(value) = signal.until_exhausted().next() {
-                    output_sample = value[0];
+                simple_logging::log_to_file("C:/Users/sonnie/log.txt", log::LevelFilter::Trace);
+                use log::info;
+                info!("{:?}", frames);
+
+                if self.frame_head < frames.len() {
+                    output_sample = frames[self.frame_head][0];
+                    self.frame_head += 1;
                 } else {
                     output_sample = 0.0;
-                };
+                }
             } else {
                 output_sample = 0.0;
             }
