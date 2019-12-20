@@ -85,6 +85,7 @@ impl MyPlugin {
         self.note = Some(note);
 
         let mut signal = self.signal_a4.clone();
+        /*
         simple_logging::log_to_file("C:/Users/kazuma/log.txt", log::LevelFilter::Debug);
         use log::debug;
         debug!(
@@ -95,6 +96,7 @@ impl MyPlugin {
                 .into_iter()
                 .collect::<Vec<f32>>()
         );
+        */
 
         let signal = {
             use sample::{interpolate, ring_buffer};
@@ -125,9 +127,10 @@ impl Default for MyPlugin {
         let reader = WavReader::new(source.as_ref()).unwrap();
         //let reader = WavReader::open("../../resource/audio/audio.wav").unwrap();
 
-        let sample_rate_source = reader.spec().sample_rate as f64;
+        let spec = reader.spec();
+        let sample_rate_source = spec.sample_rate as f64;
 
-        let mut samples = reader
+        let samples = reader
             .into_samples()
             .filter_map(Result::ok)
             .map(f32::from_sample::<i16>)
@@ -139,7 +142,19 @@ impl Default for MyPlugin {
         //use log::debug;
         //debug!("samples: {:?}", samples);
 
-        let signal = signal::from_interleaved_samples_iter(samples);
+        let mut signal = signal::from_interleaved_samples_iter(samples);
+
+        simple_logging::log_to_file("C:/Users/kazuma/log.txt", log::LevelFilter::Debug);
+        use log::debug;
+        //debug!("samples: {:?}", samples);
+        debug!(
+            "signal: {:?}",
+            signal
+                .by_ref()
+                .into_interleaved_samples()
+                .into_iter()
+                .collect::<Vec<f32>>()
+        );
 
         MyPlugin {
             sample_rate: 44100.0,
